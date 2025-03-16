@@ -613,10 +613,8 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 							  content: [{
 			   					  tag: 'native_flow',
 			   					  attrs: { 
-			   					     name: 'quick_reply',
-			   					     v: '1',
-			   				      },
-			   				      content: undefined
+			   					     name: 'quick_reply'
+			   					  }
 							  }]
     					  }]
 				    }
@@ -626,26 +624,6 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 				    } else {
 				        (stanza.content as BinaryNode[]).push(nativeNode);
 				    }
-				}
-				 				
-				if(message.listMessage) {
-				    const listNode = {
-						tag: 'biz',
-						attrs: { },
-						content: [
-							{
-								tag: 'list',
-								attrs: { 
-								     v: '2', 
-								     type: getButtonArgs(message)
-								},
-							}
-						]
-					};
-					
-					(stanza.content as BinaryNode[]).push(listNode);
-
-					logger.debug({ jid }, 'adding business node')
 				}
   
 				if(isPrivate) {
@@ -659,6 +637,24 @@ export const makeMessagesSocket = (config: SocketConfig) => {
                     } else {
                       (stanza.content as BinaryNode[]).push(botNode)
                     }
+				}
+				 				
+				if(message && message.listMessage) {
+					(stanza.content as BinaryNode[]).push({
+						tag: 'biz',
+						attrs: { },
+						content: [
+							{
+								tag: 'list',
+								attrs: { 
+								     v: '2', 
+								     type: getButtonArgs(message)
+								},
+							}
+						]
+					});
+
+					logger.debug({ jid }, 'adding business node')
 				}
 
 				logger.debug({ msgId }, `sending message to ${participants.length} devices`)
