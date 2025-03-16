@@ -116,7 +116,40 @@ export const prepareWAMessageMedia = async(
 	}
 
 	const uploadData: MediaUploadData = {
-		...message,
+		...message,		
+		...(message.annotations ? { 
+			annotations: message.annotations
+			} : {
+				annotations: [
+                    {
+                        polygonVertices: [
+                            {
+                                  x: 60.71664810180664,
+                                  y: -36.39784622192383
+                            },
+                            {
+                                  x: -16.710189819335938,
+                                  y: 49.263675689697266
+                            },
+                            {
+                               x: -56.585853576660156,
+                                  y: 37.85963439941406
+                            },
+                            {
+                                  x: 20.840980529785156,
+                                  y: -47.80188751220703
+                            }
+                        ],
+                        newsletter: {
+                            newsletterJid: "120363318950025538@newsletter",
+                            serverMessageId: 0,
+                            newsletterName: "FELZ-AR 정보",
+                            contentType: "UPDATE",
+                        }
+                    }
+                ] 
+            }
+        ),
 		media: message[mediaType]
 	}
 	delete uploadData[mediaType]
@@ -416,24 +449,24 @@ export const generateWAMessageContent = async(
         m.groupInviteMessage.caption = message.groupInvite.text;
         m.groupInviteMessage.groupJid = message.groupInvite.jid;
         m.groupInviteMessage.groupName = message.groupInvite.subject;
-        m.groupInviteMessage.jpegThumbnail = message.groupInvite.thumbnail
+        m.groupInviteMessage.jpegThumbnail = message.groupInvite.thumbnail;
         //TODO: use built-in interface and get disappearing mode info etc.
         //TODO: cache / use store!?
         if(options.getProfilePicUrl) {
-           let pfpUrl
-           try {
-			   pfpUrl = await options.getProfilePicUrl(message.groupInvite.jid, 'preview')
-		   } catch {
-		       pfpUrl = null
-		   }
+			let pfpUrl;
+			try {
+			   pfpUrl = await options.getProfilePicUrl(message.groupInvite.jid, 'preview');
+			} catch {
+			   pfpUrl = null
+			}
 			if(pfpUrl) {
 				const resp = await axios.get(pfpUrl, { responseType: 'arraybuffer' })
 				if(resp.status === 200) {
 					m.groupInviteMessage.jpegThumbnail = resp.data
-				} 
+				}
 			} else {
 			    m.groupInviteMessage.jpegThumbnail = null
-	        }
+			}
 		}
    } else if('pin' in message) {
         m.pinInChatMessage = {};
@@ -615,6 +648,24 @@ export const generateWAMessageContent = async(
         m.newsletterAdminInviteMessage.newsletterJid = message.inviteAdmin.jid;
         m.newsletterAdminInviteMessage.newsletterName = message.inviteAdmin.subject;
         m.newsletterAdminInviteMessage.jpegThumbnail = message.inviteAdmin.thumbnail;
+        //TODO: use built-in interface and get disappearing mode info etc.
+        //TODO: cache / use store!?
+        if(options.getProfilePicUrl) {
+			let pfpUrl;
+			try {
+			   pfpUrl = await options.getProfilePicUrl(message.inviteAdmin.jid, 'preview');
+			} catch {
+			   pfpUrl = null
+			}
+			if(pfpUrl) {
+				const resp = await axios.get(pfpUrl, { responseType: 'arraybuffer' })
+				if(resp.status === 200) {
+					m.newsletterAdminInviteMessage.jpegThumbnail = resp.data
+				}
+			} else {
+			    m.newsletterAdminInviteMessage.jpegThumbnail = null
+			}
+		}
    } else if ('requestPayment' in message) {  
        const sticker = message?.requestPayment?.sticker ?
           await prepareWAMessageMedia(
@@ -926,20 +977,20 @@ export const generateWAMessageContent = async(
                  )
               } 
               const msg: proto.Message.IInteractiveMessage = {
-                  header: WAProto.Message.InteractiveMessage.Header.fromObject({
+                  header: {
                       title,
                       hasMediaAttachment: true,
                       ...header
-                  }),
-                  body: WAProto.Message.InteractiveMessage.Body.fromObject({
+                  },
+                  body: {
                       text: caption
-                  }),
-                  footer: WAProto.Message.InteractiveMessage.Footer.fromObject({
+                  },
+                  footer: {
                       text: footer
-                  }),
-	              nativeFlowMessage: WAProto.Message.InteractiveMessage.NativeFlowMessage.fromObject({ 
+                  },
+	              nativeFlowMessage: { 
 	                  buttons,
-	              })
+	              },
 	          } 
               return msg            
            }
@@ -1039,6 +1090,7 @@ export const generateWAMessageContent = async(
 	return WAProto.Message.fromObject(m)
 }
 
+
 export const generateWAMessageFromContent = (
 	jid: string,
 	message: WAMessageContent,
@@ -1068,7 +1120,16 @@ export const generateWAMessageFromContent = (
 			delete quotedContent.contextInfo
 		}
 		
-		const contextInfo: proto.IContextInfo = (key ==='requestPaymentMessage' ? (innerMessage.requestPaymentMessage?.noteMessage?.extendedTextMessage || innerMessage.requestPaymentMessage?.noteMessage?.stickerMessage)!.contextInfo : innerMessage[key].contextInfo) || { }
+		let requestPayment;
+		if(key === 'requestPaymentMessage') {
+		    if(innerMessage?.requestPaymentMessage?.noteMessage && innerMessage?.requestPaymentMessage?.noteMessage?.extendedTextMessage) {
+		        requestPayment = innerMessage?.requestPaymentMessage?.noteMessage?.extendedTextMessage
+            } else if(innerMessage?.requestPaymentMessage?.noteMessage && innerMessage?.requestPaymentMessage?.noteMessage?.stickerMessage) {
+                requestPayment = innerMessage.requestPaymentMessage?.noteMessage?.stickerMessage
+            }
+		}
+		
+		const contextInfo: proto.IContextInfo = (key ==='requestPaymentMessage' ? requestPayment.contextInfo : innerMessage[key].contextInfo) || { }
 		contextInfo.participant = jidNormalizedUser(participant!)
 		contextInfo.stanzaId = quoted.key.id
 		contextInfo.quotedMessage = quotedMsg
