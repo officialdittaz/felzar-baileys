@@ -646,10 +646,7 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 						content: [
 							{
 								tag: 'list',
-								attrs: { 
-								     v: '2', 
-								     type: getButtonArgs(message)
-								},
+								attrs: getButtonArgs(message)
 							}
 						]
 					});
