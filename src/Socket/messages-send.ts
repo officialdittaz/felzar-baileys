@@ -628,7 +628,7 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 				    }
 				}
 				 				
-				if(key === 'listMessage') {
+				if(message.listMessage) {
 				    const listNode = {
 						tag: 'biz',
 						attrs: { },
@@ -637,18 +637,13 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 								tag: 'list',
 								attrs: { 
 								     v: '2', 
-								     type: getButtonArgs(inMsg)
+								     type: getButtonArgs(message)
 								},
 							}
 						]
 					};
 					
-					const resultListNode = filterListNode(additionalNodes)
-					if(resultListNode && additionalNodes && additionalNodes.length > 0) {
-				        (stanza.content as BinaryNode[]).push(...resultListNode);
-				    } else {
-				        (stanza.content as BinaryNode[]).push(listNode);
-				    }
+					(stanza.content as BinaryNode[]).push(listNode);
 
 					logger.debug({ jid }, 'adding business node')
 				}
@@ -695,19 +690,6 @@ export const makeMessagesSocket = (config: SocketConfig) => {
                 if(item!.tag === 'bot' && item!.attrs!.biz_bot === '1') {
                      return false;
                 } 
-                return true;
-            })
-        } else {
-            return nodeContent;
-        }
-    };
-    
-    const filterListNode = (nodeContent) => {
-        if(Array.isArray(nodeContent)) {
-            return nodeContent!.filter((item) => {
-                if(item!.tag === 'biz' && item!.content[0]!.tag === 'list' && (item!.content[0]!.attrs!.v === '2' && item!.content[0]!.attrs!.type === 'product_list')) {
-                     return false;
-                }
                 return true;
             })
         } else {
