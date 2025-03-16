@@ -25,6 +25,7 @@ export import WAMessageStubType = proto.WebMessageInfo.StubType
 // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
 export import WAMessageStatus = proto.WebMessageInfo.Status
 export type WAMediaUpload = Buffer | { url: URL | string } | { stream: Readable }
+export import Annotations = proto.IInteractiveAnnotation
 /** Set of message types that are supported by the library */
 export type MessageType = keyof proto.Message
 
@@ -142,7 +143,6 @@ type Listable = {
 
     /** Text of the button on the list (required) */
     buttonText?: string
-
 }
 type WithDimensions = {
     width?: number
@@ -182,6 +182,7 @@ export type AnyMediaMessageContent = (
         image: WAMediaUpload
         caption?: string
         jpegThumbnail?: string
+        annotations?: Annotations
     } & Mentionable & Contextable & Buttonable & Templatable & Interactiveable & Shopable & Collectionable & Cardsable & WithDimensions)
     | ({
         video: WAMediaUpload
@@ -190,6 +191,7 @@ export type AnyMediaMessageContent = (
         jpegThumbnail?: string
         /** if set to true, will send as a `video note` */
         ptv?: boolean
+        annotations?: Annotations
     } & Mentionable & Contextable & Buttonable & Templatable & Interactiveable & Shopable & Collectionable & Cardsable & WithDimensions)
     | {
         audio: WAMediaUpload
@@ -197,16 +199,19 @@ export type AnyMediaMessageContent = (
         ptt?: boolean
         /** optionally tell the duration of the audio */
         seconds?: number
+        annotations?: Annotations
     }
     | ({
         sticker: WAMediaUpload
         isAnimated?: boolean
+        annotations?: Annotations
     } & WithDimensions) 
     | ({
         document: WAMediaUpload
         mimetype: string
         fileName?: string
         caption?: string
+        annotations?: Annotations
     } & Contextable & Buttonable & Templatable & Interactiveable & Shopable & Collectionable & Cardsable))
     & { mimetype?: string } & Editable
 
